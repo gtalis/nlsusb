@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <libusb.h>
+#include "names.h"
 
 using namespace std;
 
@@ -16,7 +17,7 @@ public:
 	int getIdVendor() { return id_vendor_; }
 	int getIdProduct() { return id_product_; }
 	string getProductName() { return product_name_; }
-	string getManufacturerName() { return manufacturer_name_; }
+	string getVendorName() { return vendor_name_; }
 
 private:
 	int bus_num_;
@@ -24,7 +25,7 @@ private:
 	uint16_t id_vendor_;
 	uint16_t id_product_;
 	string product_name_;
-	string manufacturer_name_;
+	string vendor_name_;
 	string serial_number_;
 	libusb_device_handle *dev_handle_;
 };
