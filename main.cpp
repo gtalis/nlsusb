@@ -4,8 +4,10 @@
 
 using namespace std;
 
+
 int main(int argc, char **argv)
 {
+
 	UsbContext TheCtx;
 	
 	TheCtx.Init();
@@ -17,11 +19,7 @@ int main(int argc, char **argv)
 	
 	mV.show(usbdevs);
 	
-#if 0
-	for (string usb : usbdevs) {
-		cout << "Usb found : " << usb << endl;
-	}
-#endif
+
 	
 	TheCtx.Clean();
 }
