@@ -44,30 +44,8 @@ int UsbContext::Init()
 
 void UsbContext::getUsbDevicesList(vector<string> &list)
 {
-	char deviceInfoBuf[64];
-
 	for (UsbDevice device : usb_devices_) {
-#if 0
-		list.push_back( 
-			to_string(device.getBusNumber()) 
-			+ "\t" 
-			+ to_string(device.getDeviceAddr()) 
-			+ "\t"
-			+ to_string(device.getIdVendor())
-			+ "\t"
-			+ to_string(device.getIdProduct())
-			+ "\t"
-			+ device.getProductName() );
-#endif
-
-		snprintf(deviceInfoBuf, 64, "Bus %03d Device %03d: ID %04x:%04x\t%s %s",
-				device.getBusNumber(),
-				device.getDeviceAddr(),
-				device.getIdVendor(),
-				device.getIdProduct(),
-				device.getVendorName().c_str(),
-				device.getProductName().c_str() );
-		list.push_back (deviceInfoBuf);
+		list.push_back (device.getInfoSummary());
 	}
 }
 
