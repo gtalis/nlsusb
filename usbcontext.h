@@ -6,8 +6,8 @@
 using namespace std;
 
 class UsbContext {
-private:
 	list<UsbDevice> usb_devices_;
+	libusb_context *ctx_;
 
 public:
 	UsbContext();

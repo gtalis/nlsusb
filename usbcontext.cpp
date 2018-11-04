@@ -13,13 +13,20 @@ UsbContext::~UsbContext()
 
 int UsbContext::Init()
 {
-	int r = libusb_init(NULL);
+	/* by default, print names as well as numbers */
+	int r = names_init();
+	if (r<0) {
+		cout << "unable to initialize usb spec" << endl;
+		return r;
+	}
+
+	r = libusb_init(&ctx_);
 	if (r < 0)
 		return r;
 		
 	libusb_device **devs;
 
-	ssize_t cnt = libusb_get_device_list(NULL, &devs);
+	ssize_t cnt = libusb_get_device_list(ctx_, &devs);
 	if (cnt < 0)
 		return (int) cnt;
 
@@ -34,8 +41,6 @@ int UsbContext::Init()
 
 	libusb_free_device_list(devs, 1);
 }
-
-
 
 void UsbContext::getUsbDevicesList(vector<string> &list)
 {
@@ -55,11 +60,12 @@ void UsbContext::getUsbDevicesList(vector<string> &list)
 			+ device.getProductName() );
 #endif
 
-		snprintf(deviceInfoBuf, 64, "%03d\t%03d\t%04x:%04x\t%s",
+		snprintf(deviceInfoBuf, 64, "Bus %03d Device %03d: ID %04x:%04x\t%s %s",
 				device.getBusNumber(),
 				device.getDeviceAddr(),
 				device.getIdVendor(),
 				device.getIdProduct(),
+				device.getVendorName().c_str(),
 				device.getProductName().c_str() );
 		list.push_back (deviceInfoBuf);
 	}
@@ -67,5 +73,6 @@ void UsbContext::getUsbDevicesList(vector<string> &list)
 
 void UsbContext::Clean()
 {
-	libusb_exit(NULL);
+	names_exit();
+	libusb_exit(ctx_);
 }
