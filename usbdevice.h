@@ -19,6 +19,9 @@ public:
 	string getProductName() { return product_name_; }
 	string getVendorName() { return vendor_name_; }
 
+	string getInfoSummary();
+	string getInfoDetails();
+
 private:
 	int bus_num_;
 	int device_addr_;
@@ -26,6 +29,6 @@ private:
 	uint16_t id_product_;
 	string product_name_;
 	string vendor_name_;
-	string serial_number_;
 	libusb_device_handle *dev_handle_;
+	struct libusb_device_descriptor descriptor_;
 };
