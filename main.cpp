@@ -19,7 +19,5 @@ int main(int argc, char **argv)
 	
 	mV.show(usbdevs);
 	
-
-	
 	TheCtx.Clean();
 }
