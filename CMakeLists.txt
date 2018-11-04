@@ -8,17 +8,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
-pkg_check_modules(UDEV udev REQUIRED)
+pkg_check_modules(UDEV libudev REQUIRED)
 pkg_check_modules(NCURSES ncurses REQUIRED)
 
 file(GLOB sources
 	main.cpp
 	mainview.cpp
+	names.c
 	usbcontext.cpp
 	usbdevice.cpp
 )
 
-
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${LIBUSB_INCLUDE_DIRS})
 include_directories(${UDEV_INCLUDE_DIRS})
 include_directories(${NCURSES_INCLUDE_DIRS})
