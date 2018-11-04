@@ -36,7 +36,6 @@ void mainview::init()
 void mainview::show(const vector<string> &linesRef)
 {
 	mLines = linesRef;
-	
 	show();
 }
 
