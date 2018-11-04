@@ -27,7 +27,10 @@ void mainview::init()
     device_details_text_view_ = subwin(stdscr, LINES, COLS/2, 0, COLS/2);
     
     box(devices_listview_, ACS_VLINE, ACS_HLINE);
-    box(device_details_text_view_, ACS_VLINE, ACS_HLINE);    
+    box(device_details_text_view_, ACS_VLINE, ACS_HLINE);
+
+	// Hide cursor
+	curs_set(FALSE);
 }
 
 void mainview::show(const vector<string> &linesRef)
@@ -41,17 +44,17 @@ void mainview::refresh()
 {
 	int index = 1;
 
-	showHeaderBar();
+	//showHeaderBar();
 
 	for (string line : mLines) {
 		if (index - 1 == mCursor) {
-			wattron(devices_listview_, A_UNDERLINE);
+			wattron(devices_listview_, A_REVERSE);
 		}
 
-		mvwprintw(devices_listview_, index+1, 1, line.c_str());
+		mvwprintw(devices_listview_, index, 1, line.c_str());
 
 		if (index - 1 == mCursor) {
-			wattroff(devices_listview_, A_UNDERLINE);
+			wattroff(devices_listview_, A_REVERSE);
 		}
 
 		index++;
@@ -93,7 +96,7 @@ void mainview::showStatusLine()
 	int cols;
 	getmaxyx(stdscr,rows,cols);
 	wattron(devices_listview_, A_REVERSE);
-	mvwprintw(devices_listview_, rows - 2 , 1, "[F10] Exit\t\tcursor = %d. ROWS = %d, COLS = %d", mCursor, rows, cols);
+	mvwprintw(devices_listview_, rows - 2 , 1, "[F10] Exit");
 	wattroff(devices_listview_, A_REVERSE);
 }
 
