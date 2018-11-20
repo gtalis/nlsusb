@@ -54,3 +54,8 @@ void UsbContext::Clean()
 	names_exit();
 	libusb_exit(ctx_);
 }
+
+void UsbContext::getUsbDeviceInfo(int index, vector<string> &list)
+{
+	usb_devices_[index].getInfoDetails(list);
+}

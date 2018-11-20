@@ -12,12 +12,9 @@ int main(int argc, char **argv)
 	
 	TheCtx.Init();
 	
-	vector<string> usbdevs;
-	TheCtx.getUsbDevicesList(usbdevs);
-	
 	mainview mV;
 	
-	mV.show(usbdevs);
+	mV.show(&TheCtx);
 	
 	TheCtx.Clean();
 }

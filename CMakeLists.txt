@@ -11,20 +11,12 @@ pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
 pkg_check_modules(UDEV libudev REQUIRED)
 pkg_check_modules(NCURSES ncurses REQUIRED)
 
-file(GLOB sources
-	main.cpp
-	mainview.cpp
-	names.c
-	usbcontext.cpp
-	usbdevice.cpp
-)
-
+include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}/src/usb")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${LIBUSB_INCLUDE_DIRS})
 include_directories(${UDEV_INCLUDE_DIRS})
 include_directories(${NCURSES_INCLUDE_DIRS})
 
-add_executable(nlsusb ${sources})
-target_link_libraries(nlsusb ${LIBUSB_LIBRARIES})
-target_link_libraries(nlsusb ${UDEV_LIBRARIES})
-target_link_libraries(nlsusb ${NCURSES_LIBRARIES})
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)
+

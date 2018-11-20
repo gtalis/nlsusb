@@ -3,6 +3,7 @@
  * USB name database manipulation routines
  *
  * Copyright (C) 1999, 2000 Thomas Sailer (sailer@ife.ee.ethz.ch)
+ * Copyright (C) 2018 Gilles Talis (gilles.talis@gmail.com)
  */
 
 #ifndef _NAMES_H
@@ -13,6 +14,7 @@ extern "C" {
 #endif
 
 #include <sys/types.h>
+#include <libusb.h>
 
 /* ---------------------------------------------------------------------- */
 
@@ -37,6 +39,7 @@ int get_vendor_string(char *buf, size_t size, u_int16_t vid);
 int get_product_string(char *buf, size_t size, u_int16_t vid, u_int16_t pid);
 int get_class_string(char *buf, size_t size, u_int8_t cls);
 int get_subclass_string(char *buf, size_t size, u_int8_t cls, u_int8_t subcls);
+int get_protocol_string(char *buf, size_t size, u_int8_t cls, u_int8_t subcls, u_int8_t proto);
 
 int names_init(void);
 void names_exit(void);

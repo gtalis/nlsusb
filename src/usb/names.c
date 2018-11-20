@@ -4,6 +4,7 @@
  *
  * Copyright (C) 1999, 2000 Thomas Sailer (sailer@ife.ee.ethz.ch)
  * Copyright (C) 2013 Tom Gundersen (teg@jklm.no)
+ * Copyright (C) 2018 Gilles Talis (gilles.talis@gmail.com)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -228,6 +229,18 @@ int get_subclass_string(char *buf, size_t size, u_int8_t cls, u_int8_t subcls)
 		return 0;
 	*buf = 0;
 	if (!(cp = names_subclass(cls, subcls)))
+		return 0;
+	return snprintf(buf, size, "%s", cp);
+}
+
+int get_protocol_string(char *buf, size_t size, u_int8_t cls, u_int8_t subcls, u_int8_t proto)
+{
+	const char *cp;
+
+	if (size < 1)
+		return 0;
+	*buf = 0;
+	if (!(cp = names_protocol(cls, subcls, proto)))
 		return 0;
 	return snprintf(buf, size, "%s", cp);
 }
