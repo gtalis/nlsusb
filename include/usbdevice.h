@@ -20,8 +20,22 @@ class UsbDevice {
 	libusb_device_handle *dev_handle_;
 	struct libusb_device_descriptor descriptor_;
 
+	libusb_device *usb_dev_;
+
 private:
 	void dump_device(vector<string> &desc_info);
+	int do_wireless(vector<string> &desc_info);
+	int do_otg(struct libusb_config_descriptor *config, vector<string> &otg_info);
+	void dump_config(struct libusb_config_descriptor *config, vector<string> &config_info);
+	void do_hub(vector<string> &hub_info);
+	void dump_bos_descriptor(vector<string> &hub_info);
+	void do_dualspeed(vector<string> &hub_info);
+
+	void getConfigsInfo(vector<string> &config_info);
+	//do_debug(udev);
+	//dump_device_status(udev, otg, wireless, desc.bcdUSB >= 0x0300);
+
+
 
 public:
 	UsbDevice(libusb_device *dev);

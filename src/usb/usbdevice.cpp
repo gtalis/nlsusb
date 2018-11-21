@@ -29,6 +29,8 @@ void UsbDevice::FillDeviceInfo(libusb_device *dev)
 		return;
 	}
 	
+	usb_dev_ = dev;
+
 	id_vendor_ = descriptor_.idVendor;
 	id_product_ = descriptor_.idProduct;
 	bus_num_ = libusb_get_bus_number(dev);
@@ -67,6 +69,32 @@ string UsbDevice::getInfoSummary()
 void UsbDevice::getInfoDetails(vector<string> &info)
 {
 	dump_device(info);
+
+	int wireless = 0;
+	if (descriptor_.bcdUSB == 0x0250) {
+		wireless = do_wireless(info);
+	}
+
+	getConfigsInfo(info);
+	
+	if (!dev_handle_)
+		return;
+
+	if (descriptor_.bDeviceClass == LIBUSB_CLASS_HUB) {
+		do_hub(info);
+	}
+
+#if 0	
+	if (descriptor_.bcdUSB >= 0x0201) {
+		dump_bos_descriptor(info);
+	}
+	if (descriptor_.bcdUSB == 0x0200) {
+		do_dualspeed(info);
+	}
+	//do_debug(udev);
+	//dump_device_status(udev, otg, wireless, desc.bcdUSB >= 0x0300);
+	//libusb_close(udev);
+#endif	
 }
 
 
@@ -92,6 +120,12 @@ void UsbDevice::dump_device(vector<string> &desc_info)
 	mfg = get_dev_string(dev_handle_, descriptor_.iManufacturer);
 	prod = get_dev_string(dev_handle_, descriptor_.iProduct);
 	serial = get_dev_string(dev_handle_, descriptor_.iSerialNumber);
+
+	if (NULL == dev_handle_) {
+		snprintf(line, 128, "Couldn't open device, some information "
+			"will be missing");
+		desc_info.push_back(line);	
+	}
 
 	snprintf(line, 128, "Device Descriptor:");
 	desc_info.push_back(line);
@@ -127,4 +161,62 @@ void UsbDevice::dump_device(vector<string> &desc_info)
 	free(mfg);
 	free(prod);
 	free(serial);
+}
+
+
+void UsbDevice::do_hub(vector<string> &hub_info)
+{
+
+}
+
+
+int UsbDevice::do_wireless(vector<string> &desc_info)
+{
+	/* FIXME fetch and dump BOS etc */
+	if (dev_handle_)
+		return 0;
+	return 0;
+}
+
+
+int UsbDevice::do_otg(struct libusb_config_descriptor *config, vector<string> &otg_info)
+{
+	return 0;
+}
+
+void UsbDevice::getConfigsInfo(vector<string> &config_info)
+{
+	char line[128];
+
+	if (descriptor_.bNumConfigurations) {
+		struct libusb_config_descriptor *config;
+
+		int ret = libusb_get_config_descriptor(usb_dev_, 0, &config);
+		if (ret) {
+			config_info.push_back("Couldn't get configuration descriptor 0, "
+					"some information will be missing");
+		} else {
+			int otg = 0;
+			otg = do_otg(config, config_info) || otg;
+			libusb_free_config_descriptor(config);
+		}
+
+		for (int i = 0; i < descriptor_.bNumConfigurations; ++i) {
+			ret = libusb_get_config_descriptor(usb_dev_, i, &config);
+			if (ret) {
+				snprintf(line, 128, "Couldn't get configuration "
+						"descriptor %d, some information will "
+						"be missing\n", i);
+				config_info.push_back(line);
+			} else {
+				dump_config(config, config_info);
+				libusb_free_config_descriptor(config);
+			}
+		}
+	}	
+}
+
+void UsbDevice::dump_config(struct libusb_config_descriptor *config, vector<string> &desc_info)
+{
+
 }
