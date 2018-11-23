@@ -28,6 +28,7 @@ private:
 	int do_otg(struct libusb_config_descriptor *config, vector<string> &otg_info);
 	void dump_config(struct libusb_config_descriptor *config, vector<string> &config_info);
 	void do_hub(vector<string> &hub_info);
+	void dump_hub(const char *prefix, const unsigned char *p, vector<string> &hub_info);
 	void dump_bos_descriptor(vector<string> &hub_info);
 	void do_dualspeed(vector<string> &hub_info);
 
