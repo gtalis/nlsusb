@@ -94,7 +94,6 @@ void ListView::Refresh()
 
 #if 1
 	wclear(win_);
-	box(win_, ACS_VLINE, ACS_HLINE);
 
 	int start_x = 0;
 	int disp_size = min (start_index_ + win_height_, listItems_.size());
@@ -111,6 +110,8 @@ void ListView::Refresh()
 					
 		start_x++;
 	}
+
+	box(win_, ACS_VLINE, ACS_HLINE);
 #else
 	for (int i = 0; i < listItems_.size(); i++) {
 	
