@@ -55,4 +55,19 @@ public:
 	void getInfoDetails(vector<string> &info);
 };
 
+// helper function
+inline int typesafe_control_msg(libusb_device_handle *dev,
+	unsigned char requesttype, unsigned char request,
+	int value, int idx,
+	unsigned char *bytes, unsigned size, int timeout)
+{
+	int ret = libusb_control_transfer(dev, requesttype, request, value,
+					idx, bytes, size, timeout);
+
+	return ret;
+}
+
+#define usb_control_msg		typesafe_control_msg
+
+
 #endif
