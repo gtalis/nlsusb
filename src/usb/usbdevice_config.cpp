@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void UsbDevice::getConfigsInfo(vector<string> &config_info)
+void UsbDevice::get_config_info(vector<string> &config_info)
 {
 	char line[128];
 
@@ -41,5 +41,4 @@ void UsbDevice::getConfigsInfo(vector<string> &config_info)
 
 void UsbDevice::dump_config(struct libusb_config_descriptor *config, vector<string> &desc_info)
 {
-
 }

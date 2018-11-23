@@ -160,6 +160,7 @@ void UsbDevice::dump_hub(const char *prefix, const unsigned char *p, vector<stri
 	char line[64];
 	char extra[10];
 
+	hub_info.push_back(" ");
 	snprintf(line, 64, "%sHub Descriptor:\n", prefix);
 	hub_info.push_back(line);
 	snprintf(line, 64, "%s  bLength             %3u\n", prefix, p[0]);

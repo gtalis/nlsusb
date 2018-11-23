@@ -7,24 +7,9 @@
 
 using namespace std;
 
-#if 0
-static inline int typesafe_control_msg(libusb_device_handle *dev,
-	unsigned char requesttype, unsigned char request,
-	int value, int idx,
-	unsigned char *bytes, unsigned size, int timeout)
-{
-	int ret = libusb_control_transfer(dev, requesttype, request, value,
-					idx, bytes, size, timeout);
+#if 1
 
-	return ret;
-}
-
-#define usb_control_msg		typesafe_control_msg
-
-#define CTRL_TIMEOUT	(5*1000)	/* milliseconds */
-#define	HUB_STATUS_BYTELEN	3	/* max 3 bytes status = hub + 23 ports */
-
-void UsbDevice::dump_bos_descriptor(libusb_device_handle *fd)
+void UsbDevice::dump_bos_descriptor(vector<string> &bos_info)
 {
 	/* Total length of BOS descriptors varies.
 	 * Read first static 5 bytes which include the total length before
@@ -37,8 +22,10 @@ void UsbDevice::dump_bos_descriptor(libusb_device_handle *fd)
 	int size, ret;
 	unsigned char *buf;
 
+	char line[64];
+
 	/* Get the first 5 bytes to get the wTotalLength field */
-	ret = usb_control_msg(fd,
+	ret = usb_control_msg(dev_handle_,
 			LIBUSB_ENDPOINT_IN | LIBUSB_RECIPIENT_DEVICE,
 			LIBUSB_REQUEST_GET_DESCRIPTOR,
 			USB_DT_BOS << 8, 0,
@@ -49,38 +36,43 @@ void UsbDevice::dump_bos_descriptor(libusb_device_handle *fd)
 		return;
 
 	bos_desc_size = bos_desc_static[2] + (bos_desc_static[3] << 8);
-	printf("Binary Object Store Descriptor:\n"
-	       "  bLength             %5u\n"
-	       "  bDescriptorType     %5u\n"
-	       "  wTotalLength       0x%04x\n"
-	       "  bNumDeviceCaps      %5u\n",
-	       bos_desc_static[0], bos_desc_static[1],
-	       bos_desc_size, bos_desc_static[4]);
+
+	bos_info.push_back(" ");
+	bos_info.push_back("Binary Object Store Descriptor:\n");
+	snprintf(line, 64, "  bLength             %5u", bos_desc_static[0]);
+	bos_info.push_back(line);
+	snprintf(line, 64, "  bDescriptorType     %5u", bos_desc_static[1]);
+	bos_info.push_back(line);
+	snprintf(line, 64, "  wTotalLength        0x%04x", bos_desc_size);
+	bos_info.push_back(line);
+	snprintf(line, 64, "  bNumDeviceCaps      %5u", bos_desc_static[4]);
+	bos_info.push_back(line);
 
 	if (bos_desc_size <= 5) {
 		if (bos_desc_static[4] > 0)
-			fprintf(stderr, "Couldn't get "
-					"device capability descriptors\n");
+			bos_info.push_back("Couldn't get "
+					"device capability descriptors");
 		return;
 	}
-	bos_desc = malloc(bos_desc_size);
+	bos_desc = (unsigned char *)malloc(bos_desc_size);
 	if (!bos_desc)
 		return;
 	memset(bos_desc, 0, bos_desc_size);
 
-	ret = usb_control_msg(fd,
+	ret = usb_control_msg(dev_handle_,
 			LIBUSB_ENDPOINT_IN | LIBUSB_RECIPIENT_DEVICE,
 			LIBUSB_REQUEST_GET_DESCRIPTOR,
 			USB_DT_BOS << 8, 0,
 			bos_desc, bos_desc_size, CTRL_TIMEOUT);
 	if (ret < 0) {
-		fprintf(stderr, "Couldn't get device capability descriptors\n");
+		bos_info.push_back("Couldn't get device capability descriptors");
 		goto out;
 	}
 
 	size = bos_desc_size - 5;
 	buf = &bos_desc[5];
 
+#if 0
 	while (size >= 3) {
 		if (buf[0] < 3) {
 			printf("buf[0] = %u\n", buf[0]);
@@ -121,6 +113,8 @@ void UsbDevice::dump_bos_descriptor(libusb_device_handle *fd)
 		size -= buf[0];
 		buf += buf[0];
 	}
+#endif
+
 out:
 	free(bos_desc);
 }

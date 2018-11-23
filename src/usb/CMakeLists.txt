@@ -7,5 +7,6 @@ add_library(usbcontext
 	usbmisc.h
 	usbcontext.cpp
 	usbdevice.cpp
-	usbdevice_hub.cpp
-	usbdevice_bos.cpp)
+	usbdevice_bos.cpp
+	usbdevice_config.cpp
+	usbdevice_hub.cpp)
