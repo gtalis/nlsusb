@@ -10,6 +10,87 @@
 
 #include <sys/types.h>
 
+/* from USB 2.0 spec and updates */
+#define USB_DT_DEVICE_QUALIFIER     0x06
+#define USB_DT_OTHER_SPEED_CONFIG   0x07
+#define USB_DT_OTG          0x09
+#define USB_DT_DEBUG            0x0a
+#define USB_DT_INTERFACE_ASSOCIATION    0x0b
+#define USB_DT_SECURITY         0x0c
+#define USB_DT_KEY          0x0d
+#define USB_DT_ENCRYPTION_TYPE      0x0e
+#define USB_DT_BOS          0x0f
+#define USB_DT_DEVICE_CAPABILITY    0x10
+#define USB_DT_WIRELESS_ENDPOINT_COMP   0x11
+#define USB_DT_WIRE_ADAPTER     0x21
+#define USB_DT_RPIPE            0x22
+#define USB_DT_RC_INTERFACE     0x23
+#define USB_DT_SS_ENDPOINT_COMP     0x30
+
+/* Device Capability Type Codes (Wireless USB spec and USB 3.0 bus spec) */
+#define USB_DC_WIRELESS_USB     0x01
+#define USB_DC_20_EXTENSION     0x02
+#define USB_DC_SUPERSPEED       0x03
+#define USB_DC_CONTAINER_ID     0x04
+#define USB_DC_PLATFORM         0x05
+#define USB_DC_SUPERSPEEDPLUS       0x0a
+#define USB_DC_BILLBOARD        0x0d
+#define USB_DC_CONFIGURATION_SUMMARY    0x10
+
+/* Conventional codes for class-specific descriptors.  The convention is
+ * defined in the USB "Common Class" Spec (3.11).  Individual class specs
+ * are authoritative for their usage, not the "common class" writeup.
+ */
+#define USB_DT_CS_DEVICE        (LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_DT_DEVICE)
+#define USB_DT_CS_CONFIG        (LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_DT_CONFIG)
+#define USB_DT_CS_STRING        (LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_DT_STRING)
+#define USB_DT_CS_INTERFACE     (LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_DT_INTERFACE)
+#define USB_DT_CS_ENDPOINT      (LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_DT_ENDPOINT)
+
+#ifndef USB_CLASS_CCID
+#define USB_CLASS_CCID          0x0b
+#endif
+
+#ifndef USB_CLASS_VIDEO
+#define USB_CLASS_VIDEO         0x0e
+#endif
+
+#ifndef USB_CLASS_APPLICATION
+#define USB_CLASS_APPLICATION           0xfe
+#endif
+
+#ifndef USB_AUDIO_CLASS_1
+#define USB_AUDIO_CLASS_1       0x00
+#endif
+
+#ifndef USB_AUDIO_CLASS_2
+#define USB_AUDIO_CLASS_2       0x20
+#endif
+
+/* USB DCD for Audio Devices Release 3.0: Section A.6, pp139 */
+#ifndef USB_AUDIO_CLASS_3
+#define USB_AUDIO_CLASS_3       0x30
+#endif
+
+#ifndef USB_VIDEO_PROTOCOL_15
+#define USB_VIDEO_PROTOCOL_15       0x01
+#endif
+
+#define VERBLEVEL_DEFAULT 0 /* 0 gives lspci behaviour; 1, lsusb-0.9 */
+
+#define CTRL_RETRIES     2
+#define CTRL_TIMEOUT    (5*1000)    /* milliseconds */
+
+#define HUB_STATUS_BYTELEN  3   /* max 3 bytes status = hub + 23 ports */
+
+#define BILLBOARD_MAX_NUM_ALT_MODE  (0x34)
+
+/* from WebUSB specification : https://wicg.github.io/webusb/ */
+#define WEBUSB_GUID     "{3408b638-09a9-47a0-8bfd-a0768815b665}"
+#define WEBUSB_GET_URL      0x02
+#define USB_DT_WEBUSB_URL   0x03
+
+
 /* ---------------------------------------------------------------------- */
 
 struct audioterminal {

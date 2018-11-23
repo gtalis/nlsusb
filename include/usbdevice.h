@@ -7,6 +7,8 @@
 #include <vector>
 #include "names.h"
 
+#include "usb-spec.h"
+
 using namespace std;
 
 class UsbDevice {
@@ -29,10 +31,10 @@ private:
 	void dump_config(struct libusb_config_descriptor *config, vector<string> &config_info);
 	void do_hub(vector<string> &hub_info);
 	void dump_hub(const char *prefix, const unsigned char *p, vector<string> &hub_info);
-	void dump_bos_descriptor(vector<string> &hub_info);
+	void dump_bos_descriptor(vector<string> &bos_info);
 	void do_dualspeed(vector<string> &hub_info);
 
-	void getConfigsInfo(vector<string> &config_info);
+	void get_config_info(vector<string> &config_info);
 	//do_debug(udev);
 	//dump_device_status(udev, otg, wireless, desc.bcdUSB >= 0x0300);
 
@@ -68,6 +70,6 @@ inline int typesafe_control_msg(libusb_device_handle *dev,
 }
 
 #define usb_control_msg		typesafe_control_msg
-
+#define CTRL_TIMEOUT	(5*1000)	/* milliseconds */
 
 #endif
