@@ -85,12 +85,9 @@ void UsbDevice::getInfoDetails(vector<string> &info)
 		do_hub(info);
 	}
 
-#if 1	
 	if (descriptor_.bcdUSB >= 0x0201) {
 		dump_bos_descriptor(info);
 	}
-#endif
-
 
 #if 0
 	if (descriptor_.bcdUSB == 0x0200) {
@@ -212,4 +209,53 @@ void UsbDevice::dump_junk(const unsigned char *buf, const char *indent, unsigned
 		strncat(line, new_byte, 128);
 	}
 	info.push_back(line);
+}
+
+void UsbDevice::do_dualspeed(vector<string> &info)
+{
+	unsigned char buf[10];
+	char cls[128], subcls[128], proto[128];
+	int ret;
+
+	char line[128];
+	ret = usb_control_msg(dev_handle_,
+			LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE,
+			LIBUSB_REQUEST_GET_DESCRIPTOR,
+			USB_DT_DEVICE_QUALIFIER << 8, 0,
+			buf, sizeof buf, CTRL_TIMEOUT);
+	if (ret < 0 && errno != EPIPE)
+		perror("can't get device qualifier");
+
+	/* all dual-speed devices have a qualifier */
+	if (ret != sizeof buf
+			|| buf[0] != ret
+			|| buf[1] != USB_DT_DEVICE_QUALIFIER)
+		return;
+
+	get_class_string(cls, sizeof(cls),
+			buf[4]);
+	get_subclass_string(subcls, sizeof(subcls),
+			buf[4], buf[5]);
+	get_protocol_string(proto, sizeof(proto),
+			buf[4], buf[5], buf[6]);
+	snprintf(line, 128, "Device Qualifier (for other device speed):\n");
+	info.push_back(line);
+	snprintf(line, 128, "  bLength             %5u\n", buf[0]);
+	info.push_back(line);
+	snprintf(line, 128, "  bDescriptorType     %5u\n", buf[1]);
+	info.push_back(line);
+	snprintf(line, 128, "  bcdUSB              %2x.%02x\n", buf[3], buf[2]);
+	info.push_back(line);
+	snprintf(line, 128, "  bDeviceClass        %5u %s\n", buf[4], cls);
+	info.push_back(line);
+	snprintf(line, 128, "  bDeviceSubClass     %5u %s\n", buf[5], subcls);
+	info.push_back(line);
+	snprintf(line, 128, "  bDeviceProtocol     %5u %s\n", buf[6], proto);
+	info.push_back(line);
+	snprintf(line, 128, "  bMaxPacketSize0     %5u\n", buf[7]);
+	info.push_back(line);
+	snprintf(line, 128, "  bNumConfigurations  %5u\n", buf[8]);
+	info.push_back(line);
+
+	/* FIXME also show the OTHER_SPEED_CONFIG descriptors */
 }
