@@ -9,4 +9,5 @@ add_library(usbcontext
 	usbdevice.cpp
 	usbdevice_bos.cpp
 	usbdevice_config.cpp
+	usbdevice_config_interface.cpp
 	usbdevice_hub.cpp)
