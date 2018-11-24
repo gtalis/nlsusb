@@ -181,3 +181,35 @@ int UsbDevice::do_otg(struct libusb_config_descriptor *config, vector<string> &o
 {
 	return 0;
 }
+
+void UsbDevice::dump_bytes(const unsigned char *buf, unsigned int len, vector<string> &info)
+{
+	unsigned int i;
+
+	char line[128];
+
+	char new_byte[10];
+	for (i = 0; i < len; i++) {
+		snprintf(new_byte, 10, " %02x", buf[i]);
+		strncat(line, new_byte, 128);
+	}
+	info.push_back(line);
+}
+
+void UsbDevice::dump_junk(const unsigned char *buf, const char *indent, unsigned int len, vector<string> &info)
+{
+	unsigned int i;
+
+	if (buf[0] <= len)
+		return;
+
+	char line[128];
+	snprintf(line, 64, "%sjunk at descriptor end:", indent);
+
+	char new_byte[10];
+	for (i = len; i < buf[0]; i++) {
+		snprintf(line, 64, " %02x", buf[i]);
+		strncat(line, new_byte, 128);
+	}
+	info.push_back(line);
+}

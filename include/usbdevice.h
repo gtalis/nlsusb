@@ -25,6 +25,9 @@ class UsbDevice {
 	libusb_device *usb_dev_;
 
 private:
+	void dump_bytes(const unsigned char *buf, unsigned int len, vector<string> &info);
+	void dump_junk(const unsigned char *buf, const char *indent, unsigned int len, vector<string> &info);
+
 	void dump_device(vector<string> &desc_info);
 	int do_wireless(vector<string> &desc_info);
 	int do_otg(struct libusb_config_descriptor *config, vector<string> &otg_info);
@@ -71,5 +74,7 @@ inline int typesafe_control_msg(libusb_device_handle *dev,
 
 #define usb_control_msg		typesafe_control_msg
 #define CTRL_TIMEOUT	(5*1000)	/* milliseconds */
+
+#define le16_to_cpu(x) libusb_cpu_to_le16(libusb_cpu_to_le16(x))
 
 #endif
