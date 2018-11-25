@@ -20,6 +20,8 @@ UsbDevice::UsbDevice()
 
 UsbDevice::~UsbDevice()
 {
+	//if (dev_handle_)
+	//	libusb_close(dev_handle_);
 }
 
 void UsbDevice::FillDeviceInfo(libusb_device *dev)
@@ -72,11 +74,26 @@ void UsbDevice::getInfoDetails(vector<string> &info)
 	dump_device(info);
 
 	int wireless = 0;
+	int otg = 0;
+
 	if (descriptor_.bcdUSB == 0x0250) {
 		wireless = do_wireless(info);
 	}
 
-	get_config_info(info);
+	if (descriptor_.bNumConfigurations) {
+		struct libusb_config_descriptor *config;
+
+		int ret = libusb_get_config_descriptor(usb_dev_, 0, &config);
+		if (ret) {
+			info.push_back("Couldn't get configuration descriptor 0, "
+					"some information will be missing");
+		} else {
+			otg = do_otg(config, info) || otg;
+			libusb_free_config_descriptor(config);
+		}
+
+		dump_configs(info);
+	}
 	
 	if (!dev_handle_)
 		return;
@@ -89,14 +106,12 @@ void UsbDevice::getInfoDetails(vector<string> &info)
 		dump_bos_descriptor(info);
 	}
 
-#if 0
 	if (descriptor_.bcdUSB == 0x0200) {
 		do_dualspeed(info);
 	}
-	//do_debug(udev);
-	//dump_device_status(udev, otg, wireless, desc.bcdUSB >= 0x0300);
-	//libusb_close(udev);
-#endif	
+
+	do_debug(info);
+	dump_device_status(otg, wireless, descriptor_.bcdUSB >= 0x0300, info);
 }
 
 
@@ -179,36 +194,36 @@ int UsbDevice::do_otg(struct libusb_config_descriptor *config, vector<string> &o
 	return 0;
 }
 
-void UsbDevice::dump_bytes(const unsigned char *buf, unsigned int len, vector<string> &info)
+void UsbDevice::dump_bytes(
+		const unsigned char *buf,
+		unsigned int len,
+		char **bytes_str,
+		unsigned int max_str_len)
 {
-	unsigned int i;
-
-	char line[128];
-
 	char new_byte[10];
-	for (i = 0; i < len; i++) {
+	for (int i = 0; i < len; i++) {
 		snprintf(new_byte, 10, " %02x", buf[i]);
-		strncat(line, new_byte, 128);
+		strncat(*bytes_str, new_byte, max_str_len);
 	}
-	info.push_back(line);
 }
 
-void UsbDevice::dump_junk(const unsigned char *buf, const char *indent, unsigned int len, vector<string> &info)
+void UsbDevice::dump_junk(
+	const unsigned char *buf,
+	const char *indent,
+	unsigned int len,
+	char **junk_str,
+	unsigned int max_str_len)
 {
-	unsigned int i;
-
 	if (buf[0] <= len)
 		return;
 
-	char line[128];
-	snprintf(line, 64, "%sjunk at descriptor end:", indent);
+	snprintf(*junk_str, max_str_len, "%sjunk at descriptor end:", indent);
 
 	char new_byte[10];
-	for (i = len; i < buf[0]; i++) {
-		snprintf(line, 64, " %02x", buf[i]);
-		strncat(line, new_byte, 128);
+	for (int i = len; i < buf[0]; i++) {
+		snprintf(new_byte, 10, " %02x", buf[i]);
+		strncat(*junk_str, new_byte, max_str_len);
 	}
-	info.push_back(line);
 }
 
 void UsbDevice::do_dualspeed(vector<string> &info)
@@ -224,7 +239,7 @@ void UsbDevice::do_dualspeed(vector<string> &info)
 			USB_DT_DEVICE_QUALIFIER << 8, 0,
 			buf, sizeof buf, CTRL_TIMEOUT);
 	if (ret < 0 && errno != EPIPE)
-		perror("can't get device qualifier");
+		perror("can't get device qualifier"); // TODO: add it to info and return gracefully
 
 	/* all dual-speed devices have a qualifier */
 	if (ret != sizeof buf
@@ -258,4 +273,222 @@ void UsbDevice::do_dualspeed(vector<string> &info)
 	info.push_back(line);
 
 	/* FIXME also show the OTHER_SPEED_CONFIG descriptors */
+}
+
+void UsbDevice::do_debug(vector<string> &info)
+{
+	unsigned char buf[4];
+	int ret;
+
+	char line[128];
+
+	ret = usb_control_msg(dev_handle_,
+			LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE,
+			LIBUSB_REQUEST_GET_DESCRIPTOR,
+			USB_DT_DEBUG << 8, 0,
+			buf, sizeof buf, CTRL_TIMEOUT);
+	if (ret < 0 && errno != EPIPE)
+		perror("can't get debug descriptor"); // TODO: add it to info and return gracefully
+
+	/* some high speed devices are also "USB2 debug devices", meaning
+	 * you can use them with some EHCI implementations as another kind
+	 * of system debug channel:  like JTAG, RS232, or a console.
+	 */
+	if (ret != sizeof buf
+			|| buf[0] != ret
+			|| buf[1] != USB_DT_DEBUG)
+		return;
+
+	snprintf(line, 128, "Debug descriptor:\n");
+	info.push_back(line);
+	snprintf(line, 128, "  bLength              %4u\n", buf[0]);
+	info.push_back(line);
+	snprintf(line, 128, "  bDescriptorType      %4u\n", buf[1]);
+	info.push_back(line);
+	snprintf(line, 128, "  bDebugInEndpoint     0x%02x\n", buf[2]);
+	info.push_back(line);
+	snprintf(line, 128, "  bDebugOutEndpoint    0x%02x\n", buf[3]);
+	info.push_back(line);
+}
+
+void UsbDevice::dump_device_status(int otg, int wireless, int super_speed, vector<string> &status_info)
+{
+	unsigned char status[8];
+	int ret;
+	char line[128];
+
+	ret = usb_control_msg(dev_handle_, LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD
+				| LIBUSB_RECIPIENT_DEVICE,
+			LIBUSB_REQUEST_GET_STATUS,
+			0, 0,
+			status, 2,
+			CTRL_TIMEOUT);
+	if (ret < 0) {
+		snprintf(line, 128,
+			"cannot read device status, %s (%d)\n",
+			strerror(errno), errno);
+		status_info.push_back(line);
+		return;
+	}
+
+	snprintf(line, 128, "Device Status:     0x%02x%02x\n",
+			status[1], status[0]);
+	status_info.push_back(line);
+
+	if (status[0] & (1 << 0)) {
+		snprintf(line, 128, "  Self Powered\n");
+		status_info.push_back(line);
+	}
+	else {
+		snprintf(line, 128, "  (Bus Powered)\n");
+		status_info.push_back(line);
+	}
+
+	if (status[0] & (1 << 1)) {
+		snprintf(line, 128, "  Remote Wakeup Enabled\n");
+		status_info.push_back(line);
+	}
+
+	if (status[0] & (1 << 2) && !super_speed) {
+		/* for high speed devices */
+		if (!wireless) {
+			snprintf(line, 128, "  Test Mode\n");
+			status_info.push_back(line);
+		}
+		/* for devices with Wireless USB support */
+		else {
+			snprintf(line, 128, "  Battery Powered\n");
+			status_info.push_back(line);
+		}
+	}
+	if (super_speed) {
+		if (status[0] & (1 << 2)) {
+			snprintf(line, 128, "  U1 Enabled\n");
+			status_info.push_back(line);
+		}
+		if (status[0] & (1 << 3)) {
+			snprintf(line, 128, "  U2 Enabled\n");
+			status_info.push_back(line);
+		}
+		if (status[0] & (1 << 4)) {
+			snprintf(line, 128, "  Latency Tolerance Messaging (LTM) Enabled\n");
+			status_info.push_back(line);
+		}
+	}
+	/* if both HOST and DEVICE support OTG */
+	if (otg) {
+		if (status[0] & (1 << 3)) {
+			snprintf(line, 128, "  HNP Enabled\n");
+			status_info.push_back(line);
+		}
+		if (status[0] & (1 << 4)) {
+			snprintf(line, 128, "  HNP Capable\n");
+			status_info.push_back(line);
+		}
+		if (status[0] & (1 << 5)) {
+			snprintf(line, 128, "  ALT port is HNP Capable\n");
+			status_info.push_back(line);
+		}
+	}
+	/* for high speed devices with debug descriptors */
+	if (status[0] & (1 << 6)) {
+		snprintf(line, 128, "  Debug Mode\n");
+		status_info.push_back(line);
+	}
+
+	if (!wireless)
+		return;
+
+	/* Wireless USB exposes FIVE different types of device status,
+	 * accessed by distinct wIndex values.
+	 */
+	ret = usb_control_msg(dev_handle_, LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD
+				| LIBUSB_RECIPIENT_DEVICE,
+			LIBUSB_REQUEST_GET_STATUS,
+			0, 1 /* wireless status */,
+			status, 1,
+			CTRL_TIMEOUT);
+	if (ret < 0) {
+		snprintf(line, 128,
+			"cannot read wireless %s, %s (%d)\n",
+			"status",
+			strerror(errno), errno);
+		status_info.push_back(line);
+		return;
+	}
+	snprintf(line, 128, "Wireless Status:     0x%02x\n", status[0]);
+	if (status[0] & (1 << 0)) {
+		snprintf(line, 128, "  TX Drp IE\n");
+		status_info.push_back(line);
+	}
+	if (status[0] & (1 << 1)) {
+		snprintf(line, 128, "  Transmit Packet\n");
+		status_info.push_back(line);
+	}
+	if (status[0] & (1 << 2)) {
+		snprintf(line, 128, "  Count Packets\n");
+		status_info.push_back(line);
+	}
+	if (status[0] & (1 << 3)) {
+		snprintf(line, 128, "  Capture Packet\n");
+		status_info.push_back(line);
+	}
+
+	ret = usb_control_msg(dev_handle_, LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD
+				| LIBUSB_RECIPIENT_DEVICE,
+			LIBUSB_REQUEST_GET_STATUS,
+			0, 2 /* Channel Info */,
+			status, 1,
+			CTRL_TIMEOUT);
+	if (ret < 0) {
+		snprintf(line, 128,
+			"cannot read wireless %s, %s (%d)\n",
+			"channel info",
+			strerror(errno), errno);
+		status_info.push_back(line);
+		return;
+	}
+	snprintf(line, 128, "Channel Info:        0x%02x\n", status[0]);
+	status_info.push_back(line);
+
+	/* 3=Received data: many bytes, for count packets or capture packet */
+
+	ret = usb_control_msg(dev_handle_, LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD
+				| LIBUSB_RECIPIENT_DEVICE,
+			LIBUSB_REQUEST_GET_STATUS,
+			0, 3 /* MAS Availability */,
+			status, 8,
+			CTRL_TIMEOUT);
+	if (ret < 0) {
+		snprintf(line, 128,
+			"cannot read wireless %s, %s (%d)\n",
+			"MAS info",
+			strerror(errno), errno);
+		status_info.push_back(line);
+		return;
+	}
+	snprintf(line, 128, "MAS Availability:    ");
+	dump_bytes(status, 8, (char **)&line, 128);
+	status_info.push_back(line);
+
+	ret = usb_control_msg(dev_handle_, LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD
+				| LIBUSB_RECIPIENT_DEVICE,
+			LIBUSB_REQUEST_GET_STATUS,
+			0, 5 /* Current Transmit Power */,
+			status, 2,
+			CTRL_TIMEOUT);
+	if (ret < 0) {
+		snprintf(line, 128,
+			"cannot read wireless %s, %s (%d)\n",
+			"transmit power",
+			strerror(errno), errno);
+		status_info.push_back(line);
+		return;
+	}
+	snprintf(line, 128, "Transmit Power:\n");
+	status_info.push_back(line);
+	snprintf(line, 128, " TxNotification:     0x%02x\n", status[0]);
+	status_info.push_back(line);
+	snprintf(line, 128, " TxBeacon:     :     0x%02x\n", status[1]);
+	status_info.push_back(line);
 }

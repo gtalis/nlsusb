@@ -25,8 +25,17 @@ class UsbDevice {
 	libusb_device *usb_dev_;
 
 private:
-	void dump_bytes(const unsigned char *buf, unsigned int len, vector<string> &info);
-	void dump_junk(const unsigned char *buf, const char *indent, unsigned int len, vector<string> &info);
+	void dump_bytes(
+		const unsigned char *buf,
+		unsigned int len,
+		char **bytes_str,
+		unsigned int max_str_len);
+	void dump_junk(
+		const unsigned char *buf,
+		const char *indent,
+		unsigned int len,
+		char **junk_str,
+		unsigned int max_str_len);
 
 	void dump_device(vector<string> &desc_info);
 	int do_wireless(vector<string> &desc_info);
@@ -38,12 +47,10 @@ private:
 	void dump_hub(const char *prefix, const unsigned char *p, vector<string> &hub_info);
 	void dump_bos_descriptor(vector<string> &bos_info);
 	void do_dualspeed(vector<string> &info);
+	void do_debug(vector<string> &info);
 
-	void get_config_info(vector<string> &config_info);
-	//do_debug(udev);
-	//dump_device_status(udev, otg, wireless, desc.bcdUSB >= 0x0300);
-
-
+	void dump_configs(vector<string> &config_info);
+	void dump_device_status(int otg, int wireless, int super_speed, vector<string> &status_info);
 
 public:
 	UsbDevice(libusb_device *dev);
