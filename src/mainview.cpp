@@ -60,10 +60,14 @@ void mainview::refresh()
 void mainview::scroll_up()
 {
 	m_UsbDevices_ListView.CursorUp();
-	m_devices_idx = m_UsbDevices_ListView.getCurrentIndex();
-	std::vector<std::string> usbdevinfo;
-	m_usb_ctx->getUsbDeviceInfo(m_devices_idx, usbdevinfo);
-	m_UsbDeviceInfo_ListView.SetItems(usbdevinfo);
+
+	if (m_UsbDevices_ListView.IsFocused()) {
+		// Update specific device info pane
+		m_devices_idx = m_UsbDevices_ListView.getCurrentIndex();
+		std::vector<std::string> usbdevinfo;
+		m_usb_ctx->getUsbDeviceInfo(m_devices_idx, usbdevinfo);
+		m_UsbDeviceInfo_ListView.SetItems(usbdevinfo);
+	}
 
 	m_UsbDeviceInfo_ListView.CursorUp();
 }
@@ -71,11 +75,13 @@ void mainview::scroll_up()
 void mainview::scroll_down()
 {
 	m_UsbDevices_ListView.CursorDown();
-	m_devices_idx = m_UsbDevices_ListView.getCurrentIndex();
-	std::vector<std::string> usbdevinfo;
-	m_usb_ctx->getUsbDeviceInfo(m_devices_idx, usbdevinfo);
-	m_UsbDeviceInfo_ListView.SetItems(usbdevinfo);
 
+	if (m_UsbDevices_ListView.IsFocused()) {
+		m_devices_idx = m_UsbDevices_ListView.getCurrentIndex();
+		std::vector<std::string> usbdevinfo;
+		m_usb_ctx->getUsbDeviceInfo(m_devices_idx, usbdevinfo);
+		m_UsbDeviceInfo_ListView.SetItems(usbdevinfo);
+	}
 	m_UsbDeviceInfo_ListView.CursorDown();
 }
 
@@ -90,14 +96,17 @@ void mainview::showHeaderBar()
 {
 }
 
-
 void mainview::showStatusLine()
 {
 	int rows;
 	int cols;
 	getmaxyx(stdscr,rows,cols);
 	wattron(stdscr, A_REVERSE);
-	mvwprintw(stdscr, rows - 1 , 1, "[F10] Exit (current index = %d)\t\t\t\t", m_devices_idx);
+	mvwprintw(stdscr, rows - 1 , 1,
+		"[F10] Exit (devices list current index = %d, device info size = %d, rows = %d\t\t\t\t",
+		m_devices_idx,
+		m_UsbDeviceInfo_ListView.GetSize(),
+		LINES - 1);
 	wattroff(stdscr, A_REVERSE);
 
 	wrefresh(stdscr);
