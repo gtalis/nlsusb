@@ -41,5 +41,7 @@ public:
 	
 	void SetFocus(bool enableFocus);
 	void ToggleFocus(void) { SetFocus(! focused_); }
-	bool GetFocus(void) { return focused_; }
+	bool IsFocused(void) { return focused_; }
+
+	unsigned int GetSize() { return listItems_.size(); }
 };
