@@ -492,3 +492,36 @@ void UsbDevice::dump_device_status(int otg, int wireless, int super_speed, vecto
 	snprintf(line, 128, " TxBeacon:     :     0x%02x\n", status[1]);
 	status_info.push_back(line);
 }
+
+
+//*****  helper functions
+const char *get_guid(const unsigned char *buf)
+{
+	static char guid[39];
+
+	/* NOTE:  see RFC 4122 for more information about GUID/UUID
+	 * structure.  The first fields fields are historically big
+	 * endian numbers, dating from Apollo mc68000 workstations.
+	 */
+	snprintf(guid, 39, "{%02x%02x%02x%02x"
+			"-%02x%02x"
+			"-%02x%02x"
+			"-%02x%02x"
+			"-%02x%02x%02x%02x%02x%02x}",
+	       buf[3], buf[2], buf[1], buf[0],
+	       buf[5], buf[4],
+	       buf[7], buf[6],
+	       buf[8], buf[9],
+	       buf[10], buf[11], buf[12], buf[13], buf[14], buf[15]);
+	return guid;
+}
+
+unsigned int convert_le_u32 (const unsigned char *buf)
+{
+	return buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
+}
+
+unsigned int convert_le_u16 (const unsigned char *buf)
+{
+	return buf[0] | (buf[1] << 8);
+}

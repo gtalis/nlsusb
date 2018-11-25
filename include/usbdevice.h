@@ -86,4 +86,8 @@ inline int typesafe_control_msg(libusb_device_handle *dev,
 
 #define le16_to_cpu(x) libusb_cpu_to_le16(libusb_cpu_to_le16(x))
 
+const char *get_guid(const unsigned char *buf);
+unsigned int convert_le_u32 (const unsigned char *buf);
+unsigned int convert_le_u16 (const unsigned char *buf);
+
 #endif
