@@ -189,9 +189,66 @@ int UsbDevice::do_wireless(vector<string> &desc_info)
 }
 
 
+static const unsigned char *find_otg(const unsigned char *buf, int buflen)
+{
+	if (!buf)
+		return 0;
+	while (buflen >= 3) {
+		if (buf[0] == 3 && buf[1] == USB_DT_OTG)
+			return buf;
+		if (buf[0] > buflen)
+			return 0;
+		buflen -= buf[0];
+		buf += buf[0];
+	}
+	return 0;
+}
+
 int UsbDevice::do_otg(struct libusb_config_descriptor *config, vector<string> &otg_info)
 {
-	return 0;
+	unsigned	i, k;
+	int		j;
+	const unsigned char	*desc;
+
+	/* each config of an otg device has an OTG descriptor */
+	desc = find_otg(config->extra, config->extra_length);
+	for (i = 0; !desc && i < config->bNumInterfaces; i++) {
+		const struct libusb_interface *intf;
+
+		intf = &config->interface[i];
+		for (j = 0; !desc && j < intf->num_altsetting; j++) {
+			const struct libusb_interface_descriptor *alt;
+
+			alt = &intf->altsetting[j];
+			desc = find_otg(alt->extra, alt->extra_length);
+			for (k = 0; !desc && k < alt->bNumEndpoints; k++) {
+				const struct libusb_endpoint_descriptor *ep;
+
+				ep = &alt->endpoint[k];
+				desc = find_otg(ep->extra, ep->extra_length);
+			}
+		}
+	}
+	if (!desc)
+		return 0;
+
+	char line[128];
+
+	snprintf(line, 128, "OTG Descriptor:\n");
+	otg_info.push_back(line);
+	snprintf(line, 128, "  bLength               %3u\n", desc[0]);
+	otg_info.push_back(line);
+	snprintf(line, 128, "  bDescriptorType       %3u\n", desc[1]);
+	otg_info.push_back(line);
+	snprintf(line, 128, "  bmAttributes         0x%02x\n", desc[2]);
+	otg_info.push_back(line);
+	snprintf(line, 128, "%s%s",
+		(desc[2] & 0x01)
+			? "    SRP (Session Request Protocol)\n" : "",
+		(desc[2] & 0x02)
+			? "    HNP (Host Negotiation Protocol)\n" : "");
+	otg_info.push_back(line);
+	return 1;
 }
 
 void UsbDevice::dump_bytes(
