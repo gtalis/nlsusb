@@ -3,7 +3,7 @@
  * Misc USB routines
  *
  * Copyright (C) 2003 Aurelien Jarno (aurelien@aurel32.net)
- * Copyright (C) 2018 Gilles Talis (gilles.talis@gmail.com)
+ * Copyright (C) 2018 Gilles Talis
  */
 
 #ifndef _USBMISC_H
