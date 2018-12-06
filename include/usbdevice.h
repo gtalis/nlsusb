@@ -69,6 +69,12 @@ private:
 	void dump_configs(vector<string> &config_info);
 	void dump_device_status(int otg, int wireless, int super_speed, vector<string> &status_info);
 
+	void dump_security(const unsigned char *buf, vector<string> &info);
+
+	void dump_encryption_type(const unsigned char *buf, vector<string> &info);
+	void dump_association(const unsigned char *buf, vector<string> &info);
+
+
 public:
 	UsbDevice(libusb_device *dev);
 	UsbDevice();

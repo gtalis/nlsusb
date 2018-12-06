@@ -95,10 +95,10 @@ void UsbDevice::dump_config(struct libusb_config_descriptor *config, vector<stri
 		snprintf(line, 128,"      Battery Powered\n");
 		config_info.push_back(line);
 	}
-	snprintf(line, 128,"    MaxPower            %5umA\n", config->MaxPower * (speed >= 0x0300 ? 8 : 2));
+	snprintf(line, 128, "    MaxPower            %5umA\n", config->MaxPower * (speed >= 0x0300 ? 8 : 2));
 	config_info.push_back(line);
 
-#if 0
+
 
 	/* avoid re-ordering or hiding descriptors for display */
 	if (config->extra_length) {
@@ -107,7 +107,8 @@ void UsbDevice::dump_config(struct libusb_config_descriptor *config, vector<stri
 
 		while (size >= 2) {
 			if (buf[0] < 2) {
-				dump_junk(buf, "        ", size);
+				dump_junk(buf, "        ", size, (char **)&line, 128);
+				config_info.push_back(line);
 				break;
 			}
 			switch (buf[1]) {
@@ -115,26 +116,106 @@ void UsbDevice::dump_config(struct libusb_config_descriptor *config, vector<stri
 				/* handled separately */
 				break;
 			case USB_DT_INTERFACE_ASSOCIATION:
-				dump_association(dev, buf);
+				dump_association(buf, config_info);
 				break;
 			case USB_DT_SECURITY:
-				dump_security(buf);
+				dump_security(buf, config_info);
 				break;
 			case USB_DT_ENCRYPTION_TYPE:
-				dump_encryption_type(buf);
+				dump_encryption_type(buf, config_info);
 				break;
 			default:
 				/* often a misplaced class descriptor */
-				printf("    ** UNRECOGNIZED: ");
-				dump_bytes(buf, buf[0]);
+				snprintf(line, 128, "  ** UNRECOGNIZED: ");
+				dump_bytes(buf, buf[0], (char **)&line, 128);
+				config_info.push_back(line);
+
 				break;
 			}
 			size -= buf[0];
 			buf += buf[0];
 		}
 	}
+
+#if 0
 	for (i = 0 ; i < config->bNumInterfaces ; i++)
 		dump_interface(dev, &config->interface[i]);
 
 #endif
+}
+
+
+void UsbDevice::dump_security(const unsigned char *buf, vector<string> &config_info)
+{
+	char line[128];
+	snprintf(line, 128, "    Security Descriptor:\n");
+	config_info.push_back(line);
+	snprintf(line, 128, "      bLength             %5u\n", buf[0]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bDescriptorType     %5u\n", buf[1]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      wTotalLength       0x%04x\n", (buf[3] << 8 | buf[2]) );
+	config_info.push_back(line);
+	snprintf(line, 128, "      bNumEncryptionTypes %5u\n", buf[4]);
+	config_info.push_back(line);
+}
+
+static const char * const encryption_type[] = {
+	"UNSECURE",
+	"WIRED",
+	"CCM_1",
+	"RSA_1",
+	"RESERVED"
+};
+
+void UsbDevice::dump_encryption_type(const unsigned char *buf, vector<string> &config_info)
+{
+	int b_encryption_type = buf[2] & 0x4;
+
+	char line[128];
+	snprintf(line, 128, "    Encryption Type Descriptor:\n");
+	config_info.push_back(line);
+	snprintf(line, 128, "      bLength             %5u\n", buf[0]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bDescriptorType     %5u\n", buf[1]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bEncryptionType     %5u %s\n", buf[2], encryption_type[b_encryption_type]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bEncryptionValue    %5u\n", buf[3]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bAuthKeyIndex       %5u\n", buf[4]);
+	config_info.push_back(line);
+}
+
+void UsbDevice::dump_association(const unsigned char *buf, vector<string> &config_info)
+{
+	char cls[128], subcls[128], proto[128];
+	char *func;
+
+	get_class_string(cls, sizeof(cls), buf[4]);
+	get_subclass_string(subcls, sizeof(subcls), buf[4], buf[5]);
+	get_protocol_string(proto, sizeof(proto), buf[4], buf[5], buf[6]);
+	func = get_dev_string(dev_handle_, buf[7]);
+
+	char line[128];
+	snprintf(line, 128, "    Interface Association:\n");
+	config_info.push_back(line);
+	snprintf(line, 128, "      bLength             %5u\n", buf[0]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bDescriptorType     %5u\n", buf[1]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bFirstInterface     %5u\n", buf[2]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bInterfaceCount     %5u\n", buf[3]);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bFunctionClass      %5u %s\n", buf[4], cls);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bFunctionSubClass   %5u %s\n", buf[5], subcls);
+	config_info.push_back(line);
+	snprintf(line, 128, "      bFunctionProtocol   %5u %s\n", buf[6], proto);
+	config_info.push_back(line);
+	snprintf(line, 128, "      iFunction           %5u %s\n", buf[7], func);
+	config_info.push_back(line);
+
+	free(func);
 }
