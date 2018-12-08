@@ -26,149 +26,208 @@
 
 using namespace std;
 
-#if 0
-static void dump_ccid_device(const unsigned char *buf)
+
+void UsbDevice::dump_ccid_device(const unsigned char *buf, vector<string> &intf_info)
 {
 	unsigned int us;
 
+	char line[128];
+	char extra_info[32];
+
 	if (buf[0] < 54) {
-		printf("      Warning: Descriptor too short\n");
+		snprintf(line, 128, "      Warning: Descriptor too short\n");
+		intf_info.push_back(line);
 		return;
 	}
-	printf("      ChipCard Interface Descriptor:\n"
-	       "        bLength             %5u\n"
-	       "        bDescriptorType     %5u\n"
-	       "        bcdCCID             %2x.%02x",
-	       buf[0], buf[1], buf[3], buf[2]);
-	if (buf[3] != 1 || buf[2] != 0)
-		fputs("  (Warning: Only accurate for version 1.0)", stdout);
-	putchar('\n');
+	snprintf(line, 128, "      ChipCard Interface Descriptor:\n");
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bLength             %5u\n", buf[0]);
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bDescriptorType     %5u\n", buf[1]);
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bcdCCID             %2x.%02x", buf[3], buf[2]);
 
-	printf("        nMaxSlotIndex       %5u\n"
-		"        bVoltageSupport     %5u  %s%s%s\n",
-		buf[4],
+	if (buf[3] != 1 || buf[2] != 0) {
+		strncat(line, "  (Warning: Only accurate for version 1.0)", 128);
+	}
+	intf_info.push_back(line);
+
+	snprintf(line, 128, "        nMaxSlotIndex       %5u\n", buf[4]);
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bVoltageSupport     %5u  %s%s%s\n",
 		buf[5],
 	       (buf[5] & 1) ? "5.0V " : "",
 	       (buf[5] & 2) ? "3.0V " : "",
 	       (buf[5] & 4) ? "1.8V " : "");
+	intf_info.push_back(line);
 
 	us = convert_le_u32 (buf+6);
-	printf("        dwProtocols         %5u ", us);
+	snprintf(line, 128, "        dwProtocols         %5u ", us);
 	if ((us & 1))
-		fputs(" T=0", stdout);
+		strncat(line, " T=0", 128);
 	if ((us & 2))
-		fputs(" T=1", stdout);
+		strncat(line, " T=1", 128);
 	if ((us & ~3))
-		fputs(" (Invalid values detected)", stdout);
-	putchar('\n');
+		strncat(line, " (Invalid values detected)", 128);
+	intf_info.push_back(line);
 
 	us = convert_le_u32(buf+10);
-	printf("        dwDefaultClock      %5u\n", us);
+	snprintf(line, 128, "        dwDefaultClock      %5u\n", us);
+	intf_info.push_back(line);
 	us = convert_le_u32(buf+14);
-	printf("        dwMaxiumumClock     %5u\n", us);
-	printf("        bNumClockSupported  %5u\n", buf[18]);
+	snprintf(line, 128, "        dwMaxiumumClock     %5u\n", us);
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bNumClockSupported  %5u\n", buf[18]);
+	intf_info.push_back(line);
 	us = convert_le_u32(buf+19);
-	printf("        dwDataRate        %7u bps\n", us);
+	snprintf(line, 128, "        dwDataRate        %7u bps\n", us);
+	intf_info.push_back(line);
 	us = convert_le_u32(buf+23);
-	printf("        dwMaxDataRate     %7u bps\n", us);
-	printf("        bNumDataRatesSupp.  %5u\n", buf[27]);
+	snprintf(line, 128, "        dwMaxDataRate     %7u bps\n", us);
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bNumDataRatesSupp.  %5u\n", buf[27]);
+	intf_info.push_back(line);
 
 	us = convert_le_u32(buf+28);
-	printf("        dwMaxIFSD           %5u\n", us);
+	snprintf(line, 128, "        dwMaxIFSD           %5u\n", us);
+	intf_info.push_back(line);
 
 	us = convert_le_u32(buf+32);
-	printf("        dwSyncProtocols  %08X ", us);
+	snprintf(line, 128, "        dwSyncProtocols  %08X ", us);
 	if ((us&1))
-		fputs(" 2-wire", stdout);
+		strncat(line, " 2-wire", 128);
 	if ((us&2))
-		fputs(" 3-wire", stdout);
+		strncat(line, " 3-wire", 128);
 	if ((us&4))
-		fputs(" I2C", stdout);
-	putchar('\n');
+		strncat(line, " I2C", 128);
+	intf_info.push_back(line);
 
 	us = convert_le_u32(buf+36);
-	printf("        dwMechanical     %08X ", us);
+	snprintf(line, 128, "        dwMechanical     %08X ", us);
 	if ((us & 1))
-		fputs(" accept", stdout);
+		strncat(line, " accept", 128);
 	if ((us & 2))
-		fputs(" eject", stdout);
+		strncat(line, " eject", 128);
 	if ((us & 4))
-		fputs(" capture", stdout);
+		strncat(line, " capture", 128);
 	if ((us & 8))
-		fputs(" lock", stdout);
-	putchar('\n');
+		strncat(line, " lock", 128);
+	intf_info.push_back(line);
 
 	us = convert_le_u32(buf+40);
-	printf("        dwFeatures       %08X\n", us);
-	if ((us & 0x0002))
-		fputs("          Auto configuration based on ATR\n", stdout);
-	if ((us & 0x0004))
-		fputs("          Auto activation on insert\n", stdout);
-	if ((us & 0x0008))
-		fputs("          Auto voltage selection\n", stdout);
-	if ((us & 0x0010))
-		fputs("          Auto clock change\n", stdout);
-	if ((us & 0x0020))
-		fputs("          Auto baud rate change\n", stdout);
-	if ((us & 0x0040))
-		fputs("          Auto parameter negotiation made by CCID\n", stdout);
-	else if ((us & 0x0080))
-		fputs("          Auto PPS made by CCID\n", stdout);
-	else if ((us & (0x0040 | 0x0080)))
-		fputs("        WARNING: conflicting negotiation features\n", stdout);
+	snprintf(line, 128, "        dwFeatures       %08X\n", us);
+	intf_info.push_back(line);
+	if ((us & 0x0002)) {
+		snprintf(line, 128, "          Auto configuration based on ATR\n");
+		intf_info.push_back(line);
+	}
+	if ((us & 0x0004)) {
+		snprintf(line, 128, "          Auto activation on insert\n");
+		intf_info.push_back(line);
+	}
+	if ((us & 0x0008)) {
+		snprintf(line, 128, "          Auto voltage selection\n");
+		intf_info.push_back(line);
+	}
+	if ((us & 0x0010)) {
+		snprintf(line, 128, "          Auto clock change\n");
+		intf_info.push_back(line);
+	}
+	if ((us & 0x0020)) {
+		snprintf(line, 128, "          Auto baud rate change\n");
+		intf_info.push_back(line);
+	}
+	if ((us & 0x0040)) {
+		snprintf(line, 128, "          Auto parameter negotiation made by CCID\n");
+		intf_info.push_back(line);
+	}
+	else if ((us & 0x0080)) {
+		snprintf(line, 128, "          Auto PPS made by CCID\n");
+		intf_info.push_back(line);
+	}
+	else if ((us & (0x0040 | 0x0080))) {
+		snprintf(line, 128, "        WARNING: conflicting negotiation features\n");
+		intf_info.push_back(line);
+	}
 
-	if ((us & 0x0100))
-		fputs("          CCID can set ICC in clock stop mode\n", stdout);
-	if ((us & 0x0200))
-		fputs("          NAD value other than 0x00 accepted\n", stdout);
-	if ((us & 0x0400))
-		fputs("          Auto IFSD exchange\n", stdout);
+	if ((us & 0x0100)) {
+		snprintf(line, 128, "          CCID can set ICC in clock stop mode\n");
+		intf_info.push_back(line);
+	}
+	if ((us & 0x0200)) {
+		snprintf(line, 128, "          NAD value other than 0x00 accepted\n");
+		intf_info.push_back(line);
+	}
+	if ((us & 0x0400)) {
+		snprintf(line, 128, "          Auto IFSD exchange\n");
+		intf_info.push_back(line);
+	}
 
-	if ((us & 0x00010000))
-		fputs("          TPDU level exchange\n", stdout);
-	else if ((us & 0x00020000))
-		fputs("          Short APDU level exchange\n", stdout);
-	else if ((us & 0x00040000))
-		fputs("          Short and extended APDU level exchange\n", stdout);
-	else if ((us & 0x00070000))
-		fputs("        WARNING: conflicting exchange levels\n", stdout);
+	if ((us & 0x00010000)) {
+		snprintf(line, 128, "          TPDU level exchange\n");
+		intf_info.push_back(line);
+	}
+	else if ((us & 0x00020000)) {
+		snprintf(line, 128, "          Short APDU level exchange\n");
+		intf_info.push_back(line);
+	}
+	else if ((us & 0x00040000)) {
+		snprintf(line, 128, "          Short and extended APDU level exchange\n");
+		intf_info.push_back(line);
+	}
+	else if ((us & 0x00070000)) {
+		snprintf(line, 128, "        WARNING: conflicting exchange levels\n");
+		intf_info.push_back(line);
+	}
 
 	us = convert_le_u32(buf+44);
-	printf("        dwMaxCCIDMsgLen     %5u\n", us);
+	snprintf(line, 128, "        dwMaxCCIDMsgLen     %5u\n", us);
+	intf_info.push_back(line);
 
-	printf("        bClassGetResponse    ");
-	if (buf[48] == 0xff)
-		fputs("echo\n", stdout);
-	else
-		printf("  %02X\n", buf[48]);
+	snprintf(line, 128, "        bClassGetResponse    ");
+	if (buf[48] == 0xff) {
+		strncat(line, "echo", 128);
+	}
+	else {
+		snprintf(extra_info, 10, "  %02X\n", buf[48]);
+		strncat(line, extra_info, 128);
+	}
 
-	printf("        bClassEnvelope       ");
-	if (buf[49] == 0xff)
-		fputs("echo\n", stdout);
-	else
-		printf("  %02X\n", buf[48]);
+	strncat(line, "        bClassEnvelope       ", 128);
+	if (buf[49] == 0xff) {
+		strncat(line, "echo", 128);
+	}
+	else {
+		snprintf(extra_info, 10, "  %02X\n", buf[48]);
+		strncat(line, extra_info, 128);
+	}
 
-	printf("        wlcdLayout           ");
-	if (!buf[50] && !buf[51])
-		fputs("none\n", stdout);
-	else
-		printf("%u cols %u lines\n", buf[50], buf[51]);
+	strncat(line, "        wlcdLayout           ", 128);
+	if (!buf[50] && !buf[51]) {
+		strncat(line, "none", 128);
+	}
+	else {
+		snprintf(extra_info, 32, "%u cols %u lines", buf[50], buf[51]);
+		strncat(line, extra_info, 128);
+	}
+	intf_info.push_back(line);
 
-	printf("        bPINSupport         %5u ", buf[52]);
+	snprintf(line, 128, "        bPINSupport         %5u ", buf[52]);
 	if ((buf[52] & 1))
 		fputs(" verification", stdout);
 	if ((buf[52] & 2))
 		fputs(" modification", stdout);
 	putchar('\n');
 
-	printf("        bMaxCCIDBusySlots   %5u\n", buf[53]);
+	snprintf(line, 128, "        bMaxCCIDBusySlots   %5u\n", buf[53]);
+	intf_info.push_back(line);
 
 	if (buf[0] > 54) {
-		fputs("        junk             ", stdout);
-		dump_bytes(buf+54, buf[0]-54);
+		snprintf(line, 128, "        junk             ");
+		dump_bytes(buf+54, buf[0]-54, (char **)&line, 128);
+		intf_info.push_back(line);
 	}
 }
-#endif
 
 void UsbDevice::dump_dfu_interface(const unsigned char *buf, vector<string> &intf_info)
 {
