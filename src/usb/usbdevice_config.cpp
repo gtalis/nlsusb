@@ -137,11 +137,8 @@ void UsbDevice::dump_config(struct libusb_config_descriptor *config, vector<stri
 		}
 	}
 
-#if 0
 	for (i = 0 ; i < config->bNumInterfaces ; i++)
-		dump_interface(dev, &config->interface[i]);
-
-#endif
+		dump_interface(&config->interface[i], config_info);
 }
 
 

@@ -59,6 +59,7 @@ private:
 	int do_otg(struct libusb_config_descriptor *config, vector<string> &otg_info);
 	void dump_config(struct libusb_config_descriptor *config, vector<string> &config_info);
 	void dump_interface(const struct libusb_interface *interface, vector<string> &intf_info);
+	void dump_altsetting(const struct libusb_interface_descriptor *interface, vector<string> &intf_info);
 
 	void do_hub(vector<string> &hub_info);
 	void dump_hub(const char *prefix, const unsigned char *p, vector<string> &hub_info);
