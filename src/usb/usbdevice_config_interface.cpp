@@ -168,35 +168,52 @@ static void dump_ccid_device(const unsigned char *buf)
 		dump_bytes(buf+54, buf[0]-54);
 	}
 }
+#endif
 
-static void dump_dfu_interface(const unsigned char *buf)
+void UsbDevice::dump_dfu_interface(const unsigned char *buf, vector<string> &intf_info)
 {
-	if (buf[1] != USB_DT_CS_DEVICE)
-		printf("      Warning: Invalid descriptor\n");
-	else if (buf[0] < 7)
-		printf("      Warning: Descriptor too short\n");
-	printf("      Device Firmware Upgrade Interface Descriptor:\n"
-	       "        bLength                         %5u\n"
-	       "        bDescriptorType                 %5u\n"
-	       "        bmAttributes                    %5u\n",
-	       buf[0], buf[1], buf[2]);
-	if (buf[2] & 0xf0)
-		printf("          (unknown attributes!)\n");
-	printf("          Will %sDetach\n", (buf[2] & 0x08) ? "" : "Not ");
-	printf("          Manifestation %s\n", (buf[2] & 0x04) ? "Tolerant" : "Intolerant");
-	printf("          Upload %s\n", (buf[2] & 0x02) ? "Supported" : "Unsupported");
-	printf("          Download %s\n", (buf[2] & 0x01) ? "Supported" : "Unsupported");
-	printf("        wDetachTimeout                  %5u milliseconds\n"
-	       "        wTransferSize                   %5u bytes\n",
-	       buf[3] | (buf[4] << 8), buf[5] | (buf[6] << 8));
+	char line[128];
+
+	if (buf[1] != USB_DT_CS_DEVICE) {
+		snprintf(line, 128, "      Warning: Invalid descriptor\n");
+		intf_info.push_back(line);
+	}
+	else if (buf[0] < 7) {
+		snprintf(line, 128, "      Warning: Descriptor too short\n");
+		intf_info.push_back(line);
+	}
+	snprintf(line, 128, "      Device Firmware Upgrade Interface Descriptor:\n");
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bLength                         %5u\n", buf[0]);
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bDescriptorType                 %5u\n", buf[1]);
+	intf_info.push_back(line);
+	snprintf(line, 128, "        bmAttributes                    %5u\n", buf[2]);
+	intf_info.push_back(line);
+
+	if (buf[2] & 0xf0) {
+		snprintf(line, 128, "          (unknown attributes!)\n");
+		intf_info.push_back(line);
+	}
+	snprintf(line, 128, "          Will %sDetach\n", (buf[2] & 0x08) ? "" : "Not ");
+	intf_info.push_back(line);
+	snprintf(line, 128, "          Manifestation %s\n", (buf[2] & 0x04) ? "Tolerant" : "Intolerant");
+	intf_info.push_back(line);
+	snprintf(line, 128, "          Upload %s\n", (buf[2] & 0x02) ? "Supported" : "Unsupported");
+	intf_info.push_back(line);
+	snprintf(line, 128, "          Download %s\n", (buf[2] & 0x01) ? "Supported" : "Unsupported");
+	intf_info.push_back(line);
+	snprintf(line, 128, "        wDetachTimeout                  %5u milliseconds\n", buf[3] | (buf[4] << 8));
+	intf_info.push_back(line);
+	snprintf(line, 128, "        wTransferSize                   %5u bytes\n", buf[5] | (buf[6] << 8));
+	intf_info.push_back(line);
 
 	/* DFU 1.0 defines no version code, DFU 1.1 does */
 	if (buf[0] < 9)
 		return;
-	printf("        bcdDFUVersion                   %x.%02x\n",
-			buf[8], buf[7]);
+	snprintf(line, 128, "        bcdDFUVersion                   %x.%02x\n", buf[8], buf[7]);
+	intf_info.push_back(line);
 }
-#endif
 
 void UsbDevice::dump_altsetting(const struct libusb_interface_descriptor *interface, vector<string> &intf_info)
 {
