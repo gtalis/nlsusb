@@ -62,7 +62,7 @@ ListView::Create(WINDOW *parent, std::string name, int nlines, int ncols, int be
 	
 	name_ = name;
 
-	win_height_ = nlines;
+	win_height_ = nlines - 2; // "box" uses 2 lines
 	
 #ifdef DEBUG
 	std::string dbg_filename = name + "_listview_debug.txt";
