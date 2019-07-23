@@ -120,10 +120,7 @@ void mainview::showStatusLine()
 	getmaxyx(stdscr,rows,cols);
 	wattron(stdscr, A_REVERSE);
 	mvwprintw(stdscr, rows - 1 , 1,
-		"[F10] Exit (devices list current index = %d, device info size = %d, rows = %d\t\t\t\t",
-		m_devices_idx,
-		m_UsbDeviceInfo_ListView.GetSize(),
-		LINES - 1);
+		"[F10] Exit\t[TAB] Change window\t\t\t\t\t\t\t");
 	wattroff(stdscr, A_REVERSE);
 
 	wrefresh(stdscr);
