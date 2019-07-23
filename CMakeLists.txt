@@ -18,5 +18,14 @@ include_directories(${LIBUSB_INCLUDE_DIRS})
 include_directories(${UDEV_INCLUDE_DIRS})
 include_directories(${NCURSES_INCLUDE_DIRS})
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/src)
+add_subdirectory (${PROJECT_SOURCE_DIR}/src/usb)
+add_subdirectory (${PROJECT_SOURCE_DIR}/src/libui)
+
+
+add_executable (nlsusb src/main.cpp src/mainview.cpp)
+target_link_libraries(nlsusb usbcontext)
+target_link_libraries(nlsusb libui)
+target_link_libraries(nlsusb ${LIBUSB_LIBRARIES})
+target_link_libraries(nlsusb ${UDEV_LIBRARIES})
+target_link_libraries(nlsusb ${NCURSES_LIBRARIES})
 
