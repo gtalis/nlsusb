@@ -1,10 +1,26 @@
-project(nlsusb)
+#
+# nlsusb
+#
+project(nlsusb C CXX)
 
 cmake_minimum_required(VERSION 2.8)
 
+
+set (nlsusb_VERSION_MAJOR	0)
+set (nlsusb_VERSION_MINOR	0)
+set (nlsusb_VERSION_PATCH	1)
+
+
+# Set C++11 as a minimum required standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
+###############################################################################
+#
+# dependencies
+#
+###############################################################################
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
