@@ -8,6 +8,8 @@ It provides a "nicer" (please quote nicer as in "the laser") output to the lsusb
 It is a non-optimised, quick and dirty tool that needs cleanup, code refactoring
 and addition of fancy features like colors.
 
+![Screenshot](/images/nlsusb_screenshot.png "nslusb in action")
+
 ## Build from source
 
 ### Dependencies
