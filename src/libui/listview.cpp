@@ -243,3 +243,9 @@ void ListView::SetFocus(bool enableFocus)
 	}
 #endif	
 }
+
+void ListView::ResetCursor()
+{
+	current_index_ = 0;
+	start_index_ = 0;
+}

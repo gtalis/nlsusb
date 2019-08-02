@@ -83,7 +83,9 @@ void mainview::scroll_up()
 		m_devices_idx = m_UsbDevices_ListView.getCurrentIndex();
 		std::vector<std::string> usbdevinfo;
 		m_usb_ctx->getUsbDeviceInfo(m_devices_idx, usbdevinfo);
+		m_UsbDeviceInfo_ListView.ResetCursor();
 		m_UsbDeviceInfo_ListView.SetItems(usbdevinfo);
+		m_UsbDeviceInfo_ListView.Refresh();
 	}
 
 	m_UsbDeviceInfo_ListView.CursorUp();
@@ -94,10 +96,13 @@ void mainview::scroll_down()
 	m_UsbDevices_ListView.CursorDown();
 
 	if (m_UsbDevices_ListView.IsFocused()) {
+		// Update specific device info pane
 		m_devices_idx = m_UsbDevices_ListView.getCurrentIndex();
 		std::vector<std::string> usbdevinfo;
 		m_usb_ctx->getUsbDeviceInfo(m_devices_idx, usbdevinfo);
+		m_UsbDeviceInfo_ListView.ResetCursor();
 		m_UsbDeviceInfo_ListView.SetItems(usbdevinfo);
+		m_UsbDeviceInfo_ListView.Refresh();
 	}
 	m_UsbDeviceInfo_ListView.CursorDown();
 }
