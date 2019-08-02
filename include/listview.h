@@ -55,6 +55,7 @@ public:
 	void CursorDown();
 	void CursorUp();
 	void Select();
+	void ResetCursor();
 	
 	void SetFocus(bool enableFocus);
 	void ToggleFocus(void) { SetFocus(! focused_); }
