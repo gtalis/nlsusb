@@ -44,7 +44,13 @@ ListView::ListView(const ListView& lv)
 }
 
 int
-ListView::Create(WINDOW *parent, std::string name, int nlines, int ncols, int begin_y, int begin_x)
+ListView::Create(WINDOW *parent,
+		std::string name,
+		int nlines,
+		int ncols,
+		int begin_y,
+		int begin_x,
+		Colors_t *c)
 {
 	if (win_) {
 		return 0;
@@ -61,6 +67,11 @@ ListView::Create(WINDOW *parent, std::string name, int nlines, int ncols, int be
     box(win_, ACS_VLINE, ACS_HLINE);
 	
 	name_ = name;
+
+	if (c) {
+		colors_.focused = c->focused;
+		colors_.unfocused = c->unfocused;
+	}
 
 	win_height_ = nlines - 2; // "box" uses 2 lines
 	
@@ -117,12 +128,14 @@ void ListView::Refresh()
 	for (int i = start_index_; i < disp_size; i++) {
 		if (i == current_index_) {
 			wattron(win_, A_REVERSE);
+			wattron(win_, COLOR_PAIR(color_));
 		}
 		
 		mvwprintw(win_, start_x + 1, 1, listItems_[i].c_str());
 		
 		if (i == current_index_) {
 			wattroff(win_, A_REVERSE);
+			wattroff(win_, COLOR_PAIR(color_));
 		}
 					
 		start_x++;
@@ -236,6 +249,7 @@ void ListView::SetFocus(bool enableFocus)
 #endif
 
 	focused_ = enableFocus;
+	color_ = focused_ ? colors_.focused : colors_.unfocused;
 	
 #ifdef DEBUG
 	if (dbg_file.is_open()) {

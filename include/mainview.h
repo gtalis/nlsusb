@@ -24,6 +24,15 @@
 
 using namespace std;
 
+const int FOCUSED_COLOR_PAIR		= 1;
+const int UNFOCUSED_COLOR_PAIR		= 2;
+const int STATUS_LINE_COLOR_PAIR	= 3;
+
+#define FOCUSED_FG_COLOR		COLOR_BLACK
+#define FOCUSED_BG_COLOR		COLOR_CYAN
+#define UNFOCUSED_FG_COLOR		COLOR_BLACK
+#define UNFOCUSED_BG_COLOR		COLOR_WHITE
+
 class mainview {
 	int mCursor;
 	//vector<string> mLines;
