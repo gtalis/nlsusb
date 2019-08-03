@@ -6,9 +6,9 @@ Copyright (c) 2018-2019, Gilles Talis <gilles.talis@gmail.com>
 It provides a "nicer" (please quote nicer as in "the laser") output to the lsusb tool.
 
 It is a non-optimised, quick and dirty tool that needs cleanup, code refactoring
-and addition of fancy features like colors.
+and addition of fancy features like detection of devices hot plug.
 
-![Screenshot](/images/nlsusb_screenshot.png "nslusb in action")
+![Screenshot](/images/screenshot.png "nslusb in action")
 
 ## Build from source
 
