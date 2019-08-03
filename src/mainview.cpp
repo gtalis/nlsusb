@@ -28,7 +28,7 @@ mainview::mainview()
 }
 
 mainview::~mainview()
-{	
+{
 }
 
 void mainview::init()
@@ -39,14 +39,29 @@ void mainview::init()
 	noecho();
 	clear();
 
+	Colors_t *c = 0;
+	if (has_colors())
+	{
+		start_color();
+		// Use terminal default colors
+		use_default_colors();
+		c = new Colors_t;
+		c->focused = FOCUSED_COLOR_PAIR;
+		c->unfocused = UNFOCUSED_COLOR_PAIR;
+		init_pair( c->focused, FOCUSED_BG_COLOR, FOCUSED_FG_COLOR);
+		init_pair( c->unfocused, UNFOCUSED_BG_COLOR, UNFOCUSED_FG_COLOR);
+	}
+
 	// Hide cursor
 	curs_set(FALSE);
 
-	m_UsbDevices_ListView.Create(stdscr, "Usb_Devices", LINES - 1, COLS/2, 0, 0);
-	m_UsbDeviceInfo_ListView.Create(stdscr, "Usb_Device_Info", LINES - 1, COLS/2, 0, COLS/2);
+	m_UsbDevices_ListView.Create(stdscr, "Usb_Devices", LINES - 1, COLS/2, 0, 0, c);
+	m_UsbDeviceInfo_ListView.Create(stdscr, "Usb_Device_Info", LINES - 1, COLS/2, 0, COLS/2, c);
 
 	m_UsbDevices_ListView.SetFocus(true);
-	m_UsbDeviceInfo_ListView.SetFocus(false); 
+	m_UsbDeviceInfo_ListView.SetFocus(false);
+
+	free(c);
 }
 
 void mainview::show(UsbContext *ctx)
@@ -123,11 +138,9 @@ void mainview::showStatusLine()
 	int rows;
 	int cols;
 	getmaxyx(stdscr,rows,cols);
-	wattron(stdscr, A_REVERSE);
-	mvwprintw(stdscr, rows - 1 , 1,
-		"[F10] Exit\t[TAB] Change window\t\t\t\t\t\t\t");
-	wattroff(stdscr, A_REVERSE);
-
+	wattron(stdscr, A_BOLD);
+	mvwprintw(stdscr, rows - 1 , 1, "[F10] Exit");
+	wattroff(stdscr, A_BOLD);
 	wrefresh(stdscr);
 }
 

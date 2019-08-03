@@ -24,6 +24,11 @@
 #include <fstream>
 #endif
 
+typedef struct {
+	uint8_t focused;
+	uint8_t unfocused;
+} Colors_t;
+
 class ListView {
 	WINDOW* win_;
 	std::string	name_;
@@ -33,6 +38,9 @@ class ListView {
 	int win_height_;
 	int start_index_;
 	bool focused_;
+
+	Colors_t colors_;
+	uint8_t color_;
 
 	void ScrollDown();
 	void ScrollUp();
@@ -44,7 +52,13 @@ class ListView {
 public:
 	ListView();
 	ListView(const ListView&);
-	int Create(WINDOW *parent, std::string name, int nlines, int ncols, int begin_y, int begin_x);
+	int Create(WINDOW *parent,
+		std::string name,
+		int nlines,
+		int ncols,
+		int begin_y,
+		int begin_x,
+		Colors_t *c = 0);
 	
 	~ListView();
 	
