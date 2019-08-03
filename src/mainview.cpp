@@ -149,6 +149,8 @@ void mainview::show()
 			scroll_down();
 			break;
 		case '\t':
+		case KEY_LEFT:
+		case KEY_RIGHT:
 			toggle_panes();
 			break;
 		case 'q':
