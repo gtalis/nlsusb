@@ -27,6 +27,8 @@ pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
 pkg_check_modules(UDEV libudev REQUIRED)
 pkg_check_modules(NCURSES ncurses REQUIRED)
 
+find_package ( Threads REQUIRED )
+
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/src/usb")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -44,4 +46,5 @@ target_link_libraries(nlsusb libui)
 target_link_libraries(nlsusb ${LIBUSB_LIBRARIES})
 target_link_libraries(nlsusb ${UDEV_LIBRARIES})
 target_link_libraries(nlsusb ${NCURSES_LIBRARIES})
+target_link_libraries(nlsusb ${CMAKE_THREAD_LIBS_INIT} )
 

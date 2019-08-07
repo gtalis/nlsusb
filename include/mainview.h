@@ -49,13 +49,16 @@ class mainview {
 
 private:
 	void show();
-	void init();
+	void init(UsbContext *ctx);
 	void refresh();
+	void refreshUsbDevices();
 	void scroll_up();
 	void scroll_down();
 	void showHeaderBar();
 	void showStatusLine();
 	void toggle_panes();
+
+static void onUsbHotplugEvent(void *);
 
 public:
 	mainview();

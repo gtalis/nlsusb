@@ -31,8 +31,22 @@ mainview::~mainview()
 {
 }
 
-void mainview::init()
+void mainview::onUsbHotplugEvent(void *me)
 {
+	if (!me)
+		return;
+
+	mainview *mv = (mainview*) me;
+	mv->refreshUsbDevices();
+}
+
+
+void mainview::init(UsbContext *ctx)
+{
+	// TODO: verify ctx is not NULL
+	m_usb_ctx = ctx;
+	m_usb_ctx->registerHotPlugCallback(onUsbHotplugEvent, this);
+
 	initscr();
 	raw();
 	keypad(stdscr, TRUE);
@@ -66,18 +80,8 @@ void mainview::init()
 
 void mainview::show(UsbContext *ctx)
 {
-	// TODO: verify ctx is not NULL
-	m_usb_ctx = ctx;
-
-	std::vector<std::string> usbdevs;
-	m_usb_ctx->getUsbDevicesList(usbdevs);
-
-	m_UsbDevices_ListView.SetItems(usbdevs);
-
-	std::vector<std::string> usbdevinfo;
-	m_usb_ctx->getUsbDeviceInfo(0, usbdevinfo);
-	m_UsbDeviceInfo_ListView.SetItems(usbdevinfo);
-	show();
+	init(ctx);
+	refreshUsbDevices();
 }
 
 void mainview::refresh()
@@ -87,6 +91,20 @@ void mainview::refresh()
 
 	showHeaderBar();
 	showStatusLine();
+}
+
+
+void mainview::refreshUsbDevices()
+{
+	std::vector<std::string> usbdevs;
+	m_usb_ctx->getUsbDevicesList(usbdevs);
+
+	m_UsbDevices_ListView.SetItems(usbdevs);
+
+	std::vector<std::string> usbdevinfo;
+	m_usb_ctx->getUsbDeviceInfo(0, usbdevinfo);
+	m_UsbDeviceInfo_ListView.SetItems(usbdevinfo);
+	show();
 }
 
 void mainview::scroll_up()
@@ -146,7 +164,6 @@ void mainview::showStatusLine()
 
 void mainview::show()
 {
-	init();
 	refresh();
 
 	int ch;

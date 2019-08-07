@@ -23,11 +23,32 @@
 #include <vector>
 #include <libusb.h>
 
+#include <string>
+#include <functional>
+
+
 using namespace std;
+
+typedef void (*UsbDeviceHotPlugCb)(void *);
 
 class UsbContext {
 	vector<UsbDevice> usb_devices_;
 	libusb_context *ctx_;
+	libusb_hotplug_callback_handle cb_handle_;
+
+	UsbDeviceHotPlugCb hotPlugCb;
+	void *user_data;
+
+private:
+	int enableHotPlugDetect(bool enable);
+	static int hotplug_callback(
+		struct libusb_context *ctx,
+		struct libusb_device *dev,
+		libusb_hotplug_event event,
+		void *user_data);
+	int refreshUsbDevicesList();
+	void invokeHotPlugCallbackFn();
+
 
 public:
 	UsbContext();
@@ -36,6 +57,8 @@ public:
 	void Clean();
 	void getUsbDevicesList(vector<string> &list);
 	void getUsbDeviceInfo(int usb_device_index, vector<string> &list);
+
+	void registerHotPlugCallback(UsbDeviceHotPlugCb cb, void *in_arg) { hotPlugCb = cb; this->user_data = in_arg; }
 };
 
 #endif
