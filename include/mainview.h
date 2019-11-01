@@ -44,13 +44,20 @@ class mainview {
 	ListView m_UsbDeviceInfo_ListView;
 
 	UsbContext *m_usb_ctx;
+	Colors_t *m_colors;
 
 	int m_devices_idx;
 
 private:
 	void show();
 	void init();
+	void init_ncurses();
+	void create_panes();
+	void teardown_panes();
+	void resize_panes();
+	void resize();
 	void refresh();
+	void clearView();
 	void scroll_up();
 	void scroll_down();
 	void showHeaderBar();

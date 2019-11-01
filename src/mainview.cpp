@@ -21,9 +21,16 @@ using namespace std;
 
 #define ERROR	std::cout << __PRETTY_FUNCTION__
 
+
+static void init_colors(Colors_t *c)
+{
+
+}
+
 mainview::mainview()
 	: mCursor (0),
-	m_devices_idx(0)
+	m_devices_idx(0),
+	m_colors(NULL)
 {	
 }
 
@@ -33,35 +40,50 @@ mainview::~mainview()
 
 void mainview::init()
 {
+	init_ncurses();
+
+	init_colors(m_colors);
+
+	create_panes();
+
+	// Set initial focus
+	m_UsbDevices_ListView.SetFocus(true);
+	m_UsbDeviceInfo_ListView.SetFocus(false);
+}
+
+void mainview::init_ncurses()
+{
 	initscr();
 	raw();
 	keypad(stdscr, TRUE);
 	noecho();
 	clear();
+	// Hide cursor
+	curs_set(FALSE);
 
-	Colors_t *c = 0;
 	if (has_colors())
 	{
 		start_color();
 		// Use terminal default colors
 		use_default_colors();
-		c = new Colors_t;
-		c->focused = FOCUSED_COLOR_PAIR;
-		c->unfocused = UNFOCUSED_COLOR_PAIR;
-		init_pair( c->focused, FOCUSED_BG_COLOR, FOCUSED_FG_COLOR);
-		init_pair( c->unfocused, UNFOCUSED_BG_COLOR, UNFOCUSED_FG_COLOR);
+		m_colors = new Colors_t;
+		m_colors->focused = FOCUSED_COLOR_PAIR;
+		m_colors->unfocused = UNFOCUSED_COLOR_PAIR;
+		init_pair( m_colors->focused, FOCUSED_BG_COLOR, FOCUSED_FG_COLOR);
+		init_pair( m_colors->unfocused, UNFOCUSED_BG_COLOR, UNFOCUSED_FG_COLOR);
 	}
+}
 
-	// Hide cursor
-	curs_set(FALSE);
+void mainview::create_panes()
+{
+	m_UsbDevices_ListView.Create(stdscr, "Usb_Devices", LINES - 1, COLS/2, 0, 0, m_colors);
+	m_UsbDeviceInfo_ListView.Create(stdscr, "Usb_Device_Info", LINES - 1, COLS/2, 0, COLS/2, m_colors);
+}
 
-	m_UsbDevices_ListView.Create(stdscr, "Usb_Devices", LINES - 1, COLS/2, 0, 0, c);
-	m_UsbDeviceInfo_ListView.Create(stdscr, "Usb_Device_Info", LINES - 1, COLS/2, 0, COLS/2, c);
-
-	m_UsbDevices_ListView.SetFocus(true);
-	m_UsbDeviceInfo_ListView.SetFocus(false);
-
-	free(c);
+void mainview::teardown_panes()
+{
+	m_UsbDevices_ListView.Teardown();
+	m_UsbDeviceInfo_ListView.Teardown();
 }
 
 void mainview::show(UsbContext *ctx)
@@ -129,6 +151,12 @@ void mainview::toggle_panes()
 	m_UsbDeviceInfo_ListView.ToggleFocus();	
 }
 
+void mainview::resize_panes()
+{
+	m_UsbDevices_ListView.Resize(LINES - 1, COLS/2, 0, 0);
+	m_UsbDeviceInfo_ListView.Resize(LINES - 1, COLS/2, 0, COLS/2);
+}
+
 void mainview::showHeaderBar()
 {
 }
@@ -142,6 +170,22 @@ void mainview::showStatusLine()
 	mvwprintw(stdscr, rows - 1 , 1, "[ESC / 'q'] Exit");
 	wattroff(stdscr, A_BOLD);
 	wrefresh(stdscr);
+}
+
+void mainview::clearView()
+{
+	endwin();
+	wrefresh(stdscr);
+	clear();
+}
+
+void mainview::resize()
+{
+	// Tear down current view
+	clearView();
+
+	// resize panes
+	resize_panes();
 }
 
 #define KEY_ESCAPE	27
@@ -172,6 +216,9 @@ void mainview::show()
 		case KEY_ESCAPE:
 		case KEY_QUIT:
 			done = 1;
+			break;
+		case KEY_RESIZE:
+			resize();
 			break;
 		}
 		refresh();

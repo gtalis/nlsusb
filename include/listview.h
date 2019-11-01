@@ -31,6 +31,7 @@ typedef struct {
 
 class ListView {
 	WINDOW* win_;
+	WINDOW *parent_;
 	std::string	name_;
 	std::vector<std::string> listItems_;
 
@@ -45,6 +46,8 @@ class ListView {
 	void ScrollDown();
 	void ScrollUp();
 
+	void CreateWindow();
+
 #ifdef DEBUG
 	std::fstream dbg_file;
 #endif
@@ -52,7 +55,7 @@ class ListView {
 public:
 	ListView();
 	ListView(const ListView&);
-	int Create(WINDOW *parent,
+	void Create(WINDOW *parent,
 		std::string name,
 		int nlines,
 		int ncols,
@@ -60,6 +63,8 @@ public:
 		int begin_x,
 		Colors_t *c = 0);
 	
+	void Teardown();
+	void Resize(int nlines, int ncols, int begin_y, int begin_x);
 	~ListView();
 	
 	void SetItems(std::vector<std::string> items);

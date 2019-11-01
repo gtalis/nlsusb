@@ -17,6 +17,7 @@
 
 #include "listview.h"
 #include <iostream>
+#include <exception>
 
 ListView::ListView()
 	: win_(NULL),
@@ -25,7 +26,6 @@ ListView::ListView()
 	focused_(false)
 {
 }
-
 
 ListView::ListView(const ListView& lv)
 {
@@ -36,14 +36,9 @@ ListView::ListView(const ListView& lv)
 	win_height_= lv.win_height_;
 	start_index_= lv.start_index_;
 	focused_= lv.focused_;
-
-#ifdef DEBUG
-	std::string dbg_filename = name_ + "_listview_debug.txt";
-	dbg_file.open (dbg_filename, std::fstream::out | std::fstream::app);
-#endif
 }
 
-int
+void
 ListView::Create(WINDOW *parent,
 		std::string name,
 		int nlines,
@@ -53,19 +48,18 @@ ListView::Create(WINDOW *parent,
 		Colors_t *c)
 {
 	if (win_) {
-		return 0;
+		return;
 	}
 
-	win_ =
-		subwin(parent, nlines, ncols, begin_y, begin_x);
-		
-	if (win_ == NULL) {
-		std::cerr << " Failed to create listview " << name << std::endl;
-		return -1;
+	try {
+		win_ = subwin(parent, nlines, ncols, begin_y, begin_x);
+	} catch(const std::exception& e) {
+		std::cout << "FATAL: Failed to create " << name << " listview: " << e.what() << '\n';
 	}
 	
     box(win_, ACS_VLINE, ACS_HLINE);
-	
+
+	parent_ = parent;
 	name_ = name;
 
 	if (c) {
@@ -76,13 +70,42 @@ ListView::Create(WINDOW *parent,
 	win_height_ = nlines - 2; // "box" uses 2 lines
 	
 #ifdef DEBUG
-	std::string dbg_filename = name + "_listview_debug.txt";
-	dbg_file.open (dbg_filename, std::fstream::out);
-#endif	
-	
-	return 0;
+	if (! dbg_file.is_open()) {
+		std::string dbg_filename = name + "_listview_debug.txt";
+		dbg_file.open (dbg_filename, std::fstream::out);
+	}
+#endif
 }
-	
+
+void ListView::Teardown()
+{
+	if (win_)
+		delwin(win_);
+
+	win_ = NULL;
+}
+
+void ListView::Resize(int nlines, int ncols, int begin_y, int begin_x)
+{
+	Teardown();
+	Create(parent_, name_, nlines, ncols, begin_y, begin_x);
+
+#ifdef DEBUG
+	if (dbg_file.is_open()) {
+		dbg_file << ">>>> Resize: size= " << listItems_.size() << ", winH = " << win_height_
+		<< ", start = " << start_index_ << ",current = " << current_index_ << std::endl;
+	}
+#endif
+
+	// Resizing to a smaller window
+	// Make sure current selected line appear within
+	// smaller window and not outside of it
+	if (current_index_ - start_index_ > win_height_) {
+		start_index_ = current_index_ - win_height_ + 2;
+	}
+}
+
+
 ListView::~ListView()
 {
 #if 0
