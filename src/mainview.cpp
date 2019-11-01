@@ -139,10 +139,13 @@ void mainview::showStatusLine()
 	int cols;
 	getmaxyx(stdscr,rows,cols);
 	wattron(stdscr, A_BOLD);
-	mvwprintw(stdscr, rows - 1 , 1, "[F10] Exit");
+	mvwprintw(stdscr, rows - 1 , 1, "[ESC / 'q'] Exit");
 	wattroff(stdscr, A_BOLD);
 	wrefresh(stdscr);
 }
+
+#define KEY_ESCAPE	27
+#define KEY_QUIT	'q'
 
 void mainview::show()
 {
@@ -166,8 +169,8 @@ void mainview::show()
 		case KEY_RIGHT:
 			toggle_panes();
 			break;
-		case 'q':
-		case KEY_F(10):
+		case KEY_ESCAPE:
+		case KEY_QUIT:
 			done = 1;
 			break;
 		}
